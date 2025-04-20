@@ -26,9 +26,6 @@ public class UserInfo {
     @TableField("nickname")
     private String nickname;
 
-    @TableField("telephone")
-    private String telephone;
-
     @TableField("email")
     private String email;
 
