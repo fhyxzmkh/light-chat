@@ -56,6 +56,7 @@ public class CaptchaController {
                                            @RequestParam String email,
                                            @RequestParam String checkCode,
                                            @RequestParam Integer type) {
+
         try {
             if (!checkCode.equalsIgnoreCase((String) session.getAttribute(CHECK_CODE_KEY_EMAIL))) {
                 return ResponseEntity.badRequest().body("验证码错误");

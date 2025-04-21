@@ -6,4 +6,5 @@ public interface EmailCodeService {
 
     ResponseEntity<?> sendEmailCode(String email, Integer type);
 
+    ResponseEntity<?> isValidEmailCode(String email, String code);
 }

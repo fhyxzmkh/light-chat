@@ -2,8 +2,8 @@ package com.light.chat.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.light.chat.domain.entity.EmailCode;
-import com.light.chat.domain.entity.UserInfo;
+import com.light.chat.domain.po.EmailCode;
+import com.light.chat.domain.po.UserInfo;
 import com.light.chat.mapper.EmailCodeMapper;
 import com.light.chat.mapper.UserInfoMapper;
 import com.light.chat.service.EmailCodeService;
@@ -64,6 +64,24 @@ public class EmailCodeServiceImpl extends ServiceImpl<EmailCodeMapper, EmailCode
         }
 
         return ResponseEntity.badRequest().body("Invalid type");
+    }
+
+    @Override
+    public ResponseEntity<?> isValidEmailCode(String email, String code) {
+        QueryWrapper<EmailCode> wrapper = new QueryWrapper<>();
+        wrapper.eq("email", email);
+        wrapper.eq("code", code);
+        EmailCode emailCode = emailCodeMapper.selectOne(wrapper);
+        if (emailCode == null) {
+            return ResponseEntity.badRequest().body("邮箱验证码不正确");
+        }
+
+        if (emailCode.getStatus() == 1 || System.currentTimeMillis() - emailCode.getCreateAt().getTime() > 5 * 1000 * 60) {
+            return ResponseEntity.badRequest().body("邮箱验证码已失效");
+        }
+
+        emailCodeMapper.disableEmailCode(email);
+        return ResponseEntity.ok(null);
     }
 
     private void sendEmailCode(String toEmail, String code) {

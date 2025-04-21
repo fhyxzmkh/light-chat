@@ -1,4 +1,4 @@
-package com.light.chat.domain.entity;
+package com.light.chat.domain.po;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -15,10 +15,13 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@TableName(value = "user_contact", autoResultMap = true)
-public class UserContact {
+@TableName(value = "contact_apply", autoResultMap = true)
+public class ContactApply {
     @TableId(type = IdType.AUTO)
     private Long id;
+
+    @TableField("uuid")
+    private String uuid;
 
     @TableField("user_id")
     private String userId;
@@ -32,8 +35,11 @@ public class UserContact {
     @TableField("status")
     private Integer status;
 
-    @TableField("created_at")
-    private Date createdAt;
+    @TableField("message")
+    private String message;
+
+    @TableField("last_apply_at")
+    private Date lastApplyAt;
 
     @TableField("deleted_at")
     private Date deletedAt;

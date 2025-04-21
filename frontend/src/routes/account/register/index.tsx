@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -39,7 +39,8 @@ import {
   ArrowRightIcon,
   KeyIcon,
 } from "lucide-react";
-import { axiosInstance } from "@/config/AxiosConfig.ts";
+import axios from "axios";
+import { BASE_URL } from "@/config/AxiosConfig.ts";
 
 export const Route = createFileRoute("/account/register/")({
   component: RouteComponent,
@@ -51,12 +52,14 @@ const formSchema = z.object({
   emailCode: z.string().length(5, "邮箱验证码为5位"),
   nickname: z.string().min(2, "昵称至少2个字符").max(20, "昵称最多20个字符"),
   password: z.string().min(3, "密码至少3位").max(32, "密码最多32位"),
-  captcha: z.string().length(5, "验证码为5位"),
+  checkCode: z.string().length(5, "验证码为5位"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 function RouteComponent() {
+  const navigate = useNavigate();
+
   // 状态管理
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [captchaTimestamp, setCaptchaTimestamp] = useState(Date.now());
@@ -77,7 +80,7 @@ function RouteComponent() {
       emailCode: "",
       nickname: "",
       password: "",
-      captcha: "",
+      checkCode: "",
     },
   });
 
@@ -96,10 +99,11 @@ function RouteComponent() {
   const loadCaptchaImage = (type: number, timestamp: number) => {
     // 使用 axios 获取图片并转换为 blob URL
     return new Promise<string>((resolve) => {
-      axiosInstance
-        .get(`/checkCode`, {
+      axios
+        .get(`${BASE_URL}/checkCode`, {
           params: { type, t: timestamp },
           responseType: "blob",
+          withCredentials: true,
         })
         .then((response) => {
           const url = URL.createObjectURL(response.data);
@@ -145,13 +149,14 @@ function RouteComponent() {
 
     setIsLoading(true);
     // 发送邮箱验证码的请求
-    axiosInstance
-      .get(`/emailCode`, {
+    axios
+      .get(`${BASE_URL}/emailCode`, {
         params: {
           email,
           checkCode: captchaInput,
           type: 0,
         },
+        withCredentials: true,
       })
       .then(() => {
         setIsDialogOpen(false);
@@ -168,15 +173,18 @@ function RouteComponent() {
   // 提交注册表单
   const onSubmit = (data: FormValues) => {
     setIsLoading(true);
+    console.log(data);
     // 提交注册表单的请求
-    axiosInstance
-      .post(`/register`, data)
+    axios
+      .post(`${BASE_URL}/account/register`, data, {
+        withCredentials: true,
+      })
       .then(() => {
         // 注册成功，跳转到登录页
         toast.success("注册成功，即将跳转到登录页面", {
           duration: 2000,
           onAutoClose: () => {
-            window.location.href = "/account/login";
+            navigate({ to: "/account/login" });
           },
         });
       })
@@ -192,14 +200,14 @@ function RouteComponent() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-b from-background to-white">
       <Toaster position="top-center" richColors />
       <div className="w-full max-w-md px-4">
-        <Card className="shadow-lg border-t-4 border-t-blue-500">
+        <Card className="shadow-lg border-t-4 border-primary">
           <CardHeader className="space-y-1">
             <div className="flex justify-center mb-2">
-              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
-                <UserIcon className="w-8 h-8 text-blue-500" />
+              <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center">
+                <UserIcon className="w-8 h-8 text-primary" />
               </div>
             </div>
             <CardTitle className="text-2xl font-bold text-center text-gray-800">
@@ -321,7 +329,7 @@ function RouteComponent() {
 
                 <FormField
                   control={form.control}
-                  name="captcha"
+                  name="checkCode"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-1">
@@ -368,7 +376,7 @@ function RouteComponent() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -393,7 +401,7 @@ function RouteComponent() {
               已有账号？
               <a
                 href="/account/login"
-                className="text-blue-600 hover:underline ml-1 font-medium"
+                className="text-primary hover:underline ml-1 font-medium"
               >
                 立即登录
               </a>
@@ -407,7 +415,7 @@ function RouteComponent() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <KeyIcon className="h-5 w-5 text-blue-500" />
+              <KeyIcon className="h-5 w-5 text-primary" />
               <span>验证身份</span>
             </DialogTitle>
           </DialogHeader>
@@ -458,7 +466,7 @@ function RouteComponent() {
             <Button
               onClick={verifyAndSendEmailCode}
               disabled={isLoading}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">

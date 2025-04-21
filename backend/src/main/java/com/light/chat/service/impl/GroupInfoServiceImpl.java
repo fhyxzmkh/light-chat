@@ -1,7 +1,7 @@
 package com.light.chat.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.light.chat.domain.entity.GroupInfo;
+import com.light.chat.domain.po.GroupInfo;
 import com.light.chat.mapper.GroupInfoMapper;
 import com.light.chat.service.GroupInfoService;
 import org.springframework.stereotype.Service;

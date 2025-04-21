@@ -1,4 +1,4 @@
-package com.light.chat.domain.entity;
+package com.light.chat.domain.po;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.Date;
 
 @Data
@@ -30,7 +31,7 @@ public class UserInfo {
     private String email;
 
     @TableField("avatar")
-    private String avatar = "https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png";
+    private String avatar;
 
     @TableField("gender")
     private Integer gender;
