@@ -200,9 +200,9 @@ function RouteComponent() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-b from-background to-white">
+    <div className="flex justify-center items-center w-full min-h-screen bg-gradient-to-b from-background to-white">
       <Toaster position="top-center" richColors />
-      <div className="w-full max-w-md px-4">
+      <div className="w-full max-w-md px-4 mx-auto">
         <Card className="shadow-lg border-t-4 border-primary">
           <CardHeader className="space-y-1">
             <div className="flex justify-center mb-2">
