@@ -1,10 +1,17 @@
 package com.light.chat.service;
 
-import com.light.chat.domain.dto.request.RegisterRequest;
+import com.light.chat.domain.dto.request.RegisterOrLoginRequest;
+import com.light.chat.domain.po.UserInfo;
 import org.springframework.http.ResponseEntity;
 
 public interface UserInfoService {
 
-    ResponseEntity<?> register(RegisterRequest request);
+    ResponseEntity<?> register(RegisterOrLoginRequest request);
+
+    ResponseEntity<?> login(RegisterOrLoginRequest loginRequest);
+
+    ResponseEntity<?> updateUserInfo(UserInfo userInfo);
+
+    ResponseEntity<?> getUserInfo();
 
 }

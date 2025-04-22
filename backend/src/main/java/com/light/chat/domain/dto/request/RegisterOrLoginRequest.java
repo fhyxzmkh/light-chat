@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 
-public class RegisterRequest extends UserInfo {
+public class RegisterOrLoginRequest extends UserInfo {
 
     @Getter
     @Setter

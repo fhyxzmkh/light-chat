@@ -178,6 +178,7 @@ function RouteComponent() {
         });
 
         setIsAuthenticated(true);
+        setIsLoading(false); // 重置加载状态
 
         // 登录成功，跳转到首页
         toast.success("登录成功，即将跳转到首页", {
