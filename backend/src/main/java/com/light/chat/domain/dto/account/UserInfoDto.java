@@ -1,4 +1,4 @@
-package com.light.chat.domain.dto.response;
+package com.light.chat.domain.dto.account;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

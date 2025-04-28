@@ -1,4 +1,4 @@
-package com.light.chat.domain.dto.request;
+package com.light.chat.domain.dto.account;
 
 import com.light.chat.domain.po.UserInfo;
 import lombok.Getter;

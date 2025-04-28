@@ -1,6 +1,6 @@
 package com.light.chat.service;
 
-import com.light.chat.domain.dto.request.RegisterOrLoginRequest;
+import com.light.chat.domain.dto.account.RegisterOrLoginRequest;
 import com.light.chat.domain.po.UserInfo;
 import org.springframework.http.ResponseEntity;
 

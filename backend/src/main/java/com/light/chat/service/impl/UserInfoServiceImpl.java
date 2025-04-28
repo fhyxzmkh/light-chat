@@ -4,14 +4,15 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.light.chat.config.security.UserDetailsImpl;
-import com.light.chat.domain.dto.request.RegisterOrLoginRequest;
-import com.light.chat.domain.dto.response.UserInfoDto;
+import com.light.chat.domain.dto.account.RegisterOrLoginRequest;
+import com.light.chat.domain.dto.account.UserInfoDto;
 import com.light.chat.domain.po.UserInfo;
 import com.light.chat.mapper.UserInfoMapper;
 import com.light.chat.service.EmailCodeService;
 import com.light.chat.service.UserInfoService;
 import com.light.chat.utils.CaptchaUtil;
 import com.light.chat.utils.JwtUtil;
+import com.light.chat.utils.ObjectUtil;
 import com.light.chat.utils.SecurityUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
@@ -114,7 +115,7 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
     public ResponseEntity<?> updateUserInfo(UserInfo userInfo) {
         UserInfo user = SecurityUtil.getLoginUser();
 
-        BeanUtils.copyProperties(userInfo, user, getNullPropertyNames(userInfo));
+        BeanUtils.copyProperties(userInfo, user, ObjectUtil.getNullPropertyNames(userInfo));
 
         userInfoMapper.update(user, new QueryWrapper<UserInfo>().eq("uuid", user.getUuid()));
 
@@ -131,21 +132,6 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         result.put("userInfo", userInfoDto);
 
         return ResponseEntity.ok(result);
-    }
-
-    // 获取对象中为null的属性名
-    private String[] getNullPropertyNames(Object source) {
-        final BeanWrapper src = new BeanWrapperImpl(source);
-        java.beans.PropertyDescriptor[] pds = src.getPropertyDescriptors();
-
-        Set<String> emptyNames = new HashSet<>();
-        for (java.beans.PropertyDescriptor pd : pds) {
-            Object srcValue = src.getPropertyValue(pd.getName());
-            if (srcValue == null) {
-                emptyNames.add(pd.getName());
-            }
-        }
-        return emptyNames.toArray(new String[0]);
     }
 
 }

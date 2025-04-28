@@ -1,6 +1,6 @@
 package com.light.chat.controller.account;
 
-import com.light.chat.domain.dto.request.RegisterOrLoginRequest;
+import com.light.chat.domain.dto.account.RegisterOrLoginRequest;
 import com.light.chat.domain.po.UserInfo;
 import com.light.chat.service.UserInfoService;
 import jakarta.servlet.http.HttpSession;
@@ -11,12 +11,13 @@ import org.springframework.web.bind.annotation.*;
 import static com.light.chat.domain.constants.constants.CHECK_CODE_KEY;
 
 @RestController
+@RequestMapping("/account")
 public class AccountController {
 
     @Autowired
     private UserInfoService userInfoService;
 
-    @PostMapping("/account/register")
+    @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterOrLoginRequest registerRequest, HttpSession session) {
         String checkCode = registerRequest.getCheckCode();
         try {
@@ -29,7 +30,7 @@ public class AccountController {
         }
     }
 
-    @PostMapping("/account/login")
+    @PostMapping("/login")
     public ResponseEntity<?> login(HttpSession session, @RequestBody RegisterOrLoginRequest loginRequest) {
         String checkCode = loginRequest.getCheckCode();
         try {
@@ -42,12 +43,12 @@ public class AccountController {
         }
     }
 
-    @PostMapping("/account/profile/update")
+    @PostMapping("/profile/update")
     public ResponseEntity<?> updateUserInfo(@RequestBody UserInfo userInfo) {
         return userInfoService.updateUserInfo(userInfo);
     }
 
-    @GetMapping("/account/profile/get")
+    @GetMapping("/profile/get")
     public ResponseEntity<?> getUserInfo() {
         return userInfoService.getUserInfo();
     }
