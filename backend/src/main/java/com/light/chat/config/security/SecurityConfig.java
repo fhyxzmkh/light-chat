@@ -22,6 +22,21 @@ public class SecurityConfig {
     public SecurityConfig(JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter) {
         this.jwtAuthenticationTokenFilter = jwtAuthenticationTokenFilter;
     }
+
+    private static final String[] AUTH_WHITELIST = {
+            "/swagger-resources",
+            "/swagger-resources/**",
+            "/configuration/ui",
+            "/configuration/security",
+            "/swagger-ui.html",
+            "/webjars/**",
+            "/v3/api-docs/**",
+            "/api/public/**",
+            "/api/public/authenticate",
+            "/actuator/*",
+            "/swagger-ui/**",
+            "/doc.html"
+    };
  
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -36,6 +51,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/account/login", "/account/register", "/checkCode", "/emailCode").permitAll()
+                        .requestMatchers(AUTH_WHITELIST).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
                         // .requestMatchers(HttpMethod.POST, "/discussPost/delete").hasRole("ADMIN")
                         .anyRequest().authenticated());

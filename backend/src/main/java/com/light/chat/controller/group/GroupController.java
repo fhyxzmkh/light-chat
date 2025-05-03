@@ -1,6 +1,8 @@
 package com.light.chat.controller.group;
 
+import com.light.chat.domain.dto.group.DismissGroupRequest;
 import com.light.chat.domain.dto.group.EnterGroupRequest;
+import com.light.chat.domain.dto.group.LeaveGroupRequest;
 import com.light.chat.domain.po.GroupInfo;
 import com.light.chat.service.GroupInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,16 @@ public class GroupController {
     @PostMapping("/enter/direct")
     public ResponseEntity<?> enterGroupDirect(@RequestBody EnterGroupRequest request) {
         return groupInfoService.enterGroupDirect(request);
+    }
+
+    @PostMapping("/leave")
+    public ResponseEntity<?> leaveGroup(@RequestBody LeaveGroupRequest leaveGroupRequest) {
+        return groupInfoService.leaveGroup(leaveGroupRequest);
+    }
+
+    @PostMapping("/dismiss")
+    public ResponseEntity<?> dismissGroup(@RequestBody DismissGroupRequest dismissGroupRequest) {
+        return groupInfoService.dismissGroup(dismissGroupRequest);
     }
 
 }

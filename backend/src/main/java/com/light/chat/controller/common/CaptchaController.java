@@ -2,6 +2,8 @@ package com.light.chat.controller.common;
 
 import com.light.chat.service.EmailCodeService;
 import com.light.chat.utils.CaptchaUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import static com.light.chat.domain.constants.constants.*;
 
 @RestController
+@Tag(name = "验证码相关接口")
 public class CaptchaController {
 
     @Autowired
@@ -23,6 +26,7 @@ public class CaptchaController {
      * @param type null或者0为默认验证码，1为邮箱验证码
      */
     @GetMapping("/checkCode")
+    @Operation(summary = "生成验证码")
     public void generateCaptcha(HttpSession session,
                                 HttpServletResponse response,
                                 @RequestParam Integer type) {
@@ -52,6 +56,7 @@ public class CaptchaController {
      * @param type 0为注册，1为找回密码
      */
     @GetMapping("/emailCode")
+    @Operation(summary = "获取邮箱验证码")
     public ResponseEntity<?> sendEmailCode(HttpSession session,
                                            @RequestParam String email,
                                            @RequestParam String checkCode,

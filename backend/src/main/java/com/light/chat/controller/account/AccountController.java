@@ -3,6 +3,8 @@ package com.light.chat.controller.account;
 import com.light.chat.domain.dto.account.RegisterOrLoginRequest;
 import com.light.chat.domain.po.UserInfo;
 import com.light.chat.service.UserInfoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,12 +14,14 @@ import static com.light.chat.domain.constants.constants.CHECK_CODE_KEY;
 
 @RestController
 @RequestMapping("/account")
+@Tag(name = "账号相关接口")
 public class AccountController {
 
     @Autowired
     private UserInfoService userInfoService;
 
     @PostMapping("/register")
+    @Operation(summary = "用户注册")
     public ResponseEntity<?> register(@RequestBody RegisterOrLoginRequest registerRequest, HttpSession session) {
         String checkCode = registerRequest.getCheckCode();
         try {
@@ -31,6 +35,7 @@ public class AccountController {
     }
 
     @PostMapping("/login")
+    @Operation(summary = "用户登录")
     public ResponseEntity<?> login(HttpSession session, @RequestBody RegisterOrLoginRequest loginRequest) {
         String checkCode = loginRequest.getCheckCode();
         try {
@@ -44,11 +49,13 @@ public class AccountController {
     }
 
     @PostMapping("/profile/update")
+    @Operation(summary = "更新用户信息")
     public ResponseEntity<?> updateUserInfo(@RequestBody UserInfo userInfo) {
         return userInfoService.updateUserInfo(userInfo);
     }
 
     @GetMapping("/profile/get")
+    @Operation(summary = "获取用户信息")
     public ResponseEntity<?> getUserInfo() {
         return userInfoService.getUserInfo();
     }
