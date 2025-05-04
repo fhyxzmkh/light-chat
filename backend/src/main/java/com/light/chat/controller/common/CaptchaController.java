@@ -1,5 +1,8 @@
 package com.light.chat.controller.common;
 
+import com.light.chat.domain.enums.ResponseCodeEnum;
+import com.light.chat.domain.vo.ResponseVO;
+import com.light.chat.exception.BusinessException;
 import com.light.chat.service.EmailCodeService;
 import com.light.chat.utils.CaptchaUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,7 +19,7 @@ import static com.light.chat.domain.constants.constants.*;
 
 @RestController
 @Tag(name = "验证码相关接口")
-public class CaptchaController {
+public class CaptchaController extends ABaseController{
 
     @Autowired
     private EmailCodeService emailCodeService;
@@ -57,17 +60,17 @@ public class CaptchaController {
      */
     @GetMapping("/emailCode")
     @Operation(summary = "获取邮箱验证码")
-    public ResponseEntity<?> sendEmailCode(HttpSession session,
-                                           @RequestParam String email,
-                                           @RequestParam String checkCode,
-                                           @RequestParam Integer type) {
+    public ResponseVO sendEmailCode(HttpSession session,
+                                    @RequestParam String email,
+                                    @RequestParam String checkCode,
+                                    @RequestParam Integer type) {
 
         try {
             if (!checkCode.equalsIgnoreCase((String) session.getAttribute(CHECK_CODE_KEY_EMAIL))) {
-                return ResponseEntity.badRequest().body("验证码错误");
+                throw new BusinessException(ResponseCodeEnum.CODE_600);
             }
 
-            return emailCodeService.sendEmailCode(email, type);
+            return getSuccessResponseVO(emailCodeService.sendEmailCode(email, type));
         } finally {
             session.removeAttribute(CHECK_CODE_KEY_EMAIL);
         }

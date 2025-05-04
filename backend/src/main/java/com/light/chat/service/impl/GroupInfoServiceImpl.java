@@ -11,10 +11,12 @@ import com.light.chat.domain.dto.group.EnterGroupRequest;
 import com.light.chat.domain.dto.group.LeaveGroupRequest;
 import com.light.chat.domain.enums.ContactStatusEnum;
 import com.light.chat.domain.enums.ContactTypeEnum;
+import com.light.chat.domain.enums.ResponseCodeEnum;
 import com.light.chat.domain.po.ContactApply;
 import com.light.chat.domain.po.GroupInfo;
 import com.light.chat.domain.po.Session;
 import com.light.chat.domain.po.UserContact;
+import com.light.chat.exception.BusinessException;
 import com.light.chat.mapper.ContactApplyMapper;
 import com.light.chat.mapper.GroupInfoMapper;
 import com.light.chat.mapper.SessionMapper;
@@ -54,9 +56,9 @@ public class GroupInfoServiceImpl extends ServiceImpl<GroupInfoMapper, GroupInfo
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResponseEntity<?> createGroup(GroupInfo groupInfo) {
+    public String createGroup(GroupInfo groupInfo) {
         if (StringUtils.isBlank(groupInfo.getName())) {
-            return ResponseEntity.badRequest().body("Group name cannot be empty");
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
 
         GroupInfo newGroup = new GroupInfo();
@@ -76,7 +78,7 @@ public class GroupInfoServiceImpl extends ServiceImpl<GroupInfoMapper, GroupInfo
 
         userContactMapper.insert(userContact);
 
-        return ResponseEntity.ok("Group created successfully");
+        return "Group created successfully";
     }
 
     /**
@@ -84,7 +86,7 @@ public class GroupInfoServiceImpl extends ServiceImpl<GroupInfoMapper, GroupInfo
      * @return
      */
     @Override
-    public ResponseEntity<?> loadMyGroups() {
+    public JSONArray loadMyGroups() {
         // TODO：add redis
 
         QueryWrapper<GroupInfo> queryWrapper = new QueryWrapper<>();
@@ -94,7 +96,7 @@ public class GroupInfoServiceImpl extends ServiceImpl<GroupInfoMapper, GroupInfo
         queryWrapper.orderByDesc("created_at");
         List<GroupInfo> groupInfos = groupInfoMapper.selectList(queryWrapper);
 
-        return ResponseEntity.ok(new JSONArray(groupInfos));
+        return new JSONArray(groupInfos);
     }
 
     /**
@@ -103,7 +105,7 @@ public class GroupInfoServiceImpl extends ServiceImpl<GroupInfoMapper, GroupInfo
      * @return
      */
     @Override
-    public ResponseEntity<?> checkGroupAddMode(String groupId) {
+    public Integer checkGroupAddMode(String groupId) {
         // TODO：add redis
 
         QueryWrapper<GroupInfo> queryWrapper = new QueryWrapper<>();
@@ -111,10 +113,10 @@ public class GroupInfoServiceImpl extends ServiceImpl<GroupInfoMapper, GroupInfo
         GroupInfo groupInfo = groupInfoMapper.selectOne(queryWrapper);
 
         if (groupInfo == null) {
-            return ResponseEntity.badRequest().body("Group not found");
+            throw new BusinessException("Group not found");
         }
 
-        return ResponseEntity.ok(groupInfo.getAddMode());
+        return groupInfo.getAddMode();
     }
 
     /**
@@ -124,13 +126,9 @@ public class GroupInfoServiceImpl extends ServiceImpl<GroupInfoMapper, GroupInfo
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResponseEntity<?> enterGroupDirect(EnterGroupRequest request) {
-        if (StringUtils.isBlank(request.getGroupId())) {
-            return ResponseEntity.badRequest().body("Group ID cannot be empty");
-        }
-
-        if (StringUtils.isBlank(request.getContactId())) {
-            return ResponseEntity.badRequest().body("Contact ID cannot be empty");
+    public String enterGroupDirect(EnterGroupRequest request) {
+        if (StringUtils.isBlank(request.getGroupId()) || StringUtils.isBlank(request.getContactId())) {
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
 
         QueryWrapper<GroupInfo> queryWrapper = new QueryWrapper<>();
@@ -138,13 +136,13 @@ public class GroupInfoServiceImpl extends ServiceImpl<GroupInfoMapper, GroupInfo
         GroupInfo groupInfo = groupInfoMapper.selectOne(queryWrapper);
 
         if (groupInfo == null) {
-            return ResponseEntity.badRequest().body("Group not found");
+            throw new BusinessException("Group not found");
         }
 
         JSONArray members = JSON.parseArray(groupInfo.getMembers());
 
         if (members.contains(request.getContactId())) {
-            return ResponseEntity.badRequest().body("User already in group");
+            throw new BusinessException("User already in group");
         }
 
         members.add(request.getContactId());
@@ -163,17 +161,17 @@ public class GroupInfoServiceImpl extends ServiceImpl<GroupInfoMapper, GroupInfo
 
         userContactMapper.insert(userContact);
 
-        return ResponseEntity.ok("Entered group successfully");
+        return "Entered group successfully";
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResponseEntity<?> leaveGroup(LeaveGroupRequest leaveGroupRequest) {
+    public String leaveGroup(LeaveGroupRequest leaveGroupRequest) {
         String groupId = leaveGroupRequest.getGroupId();
         String userId = leaveGroupRequest.getUserId();
 
         if (StringUtils.isBlank(groupId) || StringUtils.isBlank(userId)) {
-            return ResponseEntity.badRequest().body("Group ID and User ID cannot be empty");
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
 
         // 从群组中移除用户
@@ -183,12 +181,12 @@ public class GroupInfoServiceImpl extends ServiceImpl<GroupInfoMapper, GroupInfo
         );
 
         if (groupInfo == null) {
-            return ResponseEntity.badRequest().body("Group not found");
+            throw new BusinessException("Group not found");
         }
 
         JSONArray members = JSON.parseArray(groupInfo.getMembers());
         if (!members.contains(userId)) {
-            return ResponseEntity.badRequest().body("User not in group");
+            throw new BusinessException("User not in group");
         }
         members.remove(userId);
 
@@ -207,7 +205,7 @@ public class GroupInfoServiceImpl extends ServiceImpl<GroupInfoMapper, GroupInfo
                         .eq(Session::getSendId, userId)
                         .eq(Session::getReceiveId, groupId)
         ) <= 0) {
-            return ResponseEntity.badRequest().body("Failed to delete session");
+            throw new BusinessException(ResponseCodeEnum.CODE_500);
         }
 
         // 更新联系人状态
@@ -218,7 +216,7 @@ public class GroupInfoServiceImpl extends ServiceImpl<GroupInfoMapper, GroupInfo
                         .set(UserContact::getDeletedAt, now)
                         .set(UserContact::getStatus, ContactStatusEnum.QUIT_GROUP.getCode())
         ) <= 0) {
-            return ResponseEntity.badRequest().body("Failed to update contact status");
+            throw new BusinessException(ResponseCodeEnum.CODE_500);
         }
 
         // 删除申请记录
@@ -228,22 +226,22 @@ public class GroupInfoServiceImpl extends ServiceImpl<GroupInfoMapper, GroupInfo
                         .eq(ContactApply::getContactId, groupId)
                         .set(ContactApply::getDeletedAt, now)
         ) <= 0) {
-            return ResponseEntity.badRequest().body("Failed to delete contact apply");
+            throw new BusinessException(ResponseCodeEnum.CODE_500);
         }
 
         // TODO：清理redis缓存
 
-        return ResponseEntity.ok("Leave group successfully");
+        return "Leave group successfully";
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResponseEntity<?> dismissGroup(DismissGroupRequest dismissGroupRequest) {
+    public String dismissGroup(DismissGroupRequest dismissGroupRequest) {
         String groupId = dismissGroupRequest.getGroupId();
         String ownerId = dismissGroupRequest.getOwnerId();
 
         if (StringUtils.isBlank(groupId) || StringUtils.isBlank(ownerId)) {
-            return ResponseEntity.badRequest().body("Group ID and Owner ID cannot be empty");
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
 
         Date now = new Date();
@@ -254,7 +252,7 @@ public class GroupInfoServiceImpl extends ServiceImpl<GroupInfoMapper, GroupInfo
                         .eq(GroupInfo::getUuid, groupId)
                         .set(GroupInfo::getDeletedAt, now)
         ) <= 0) {
-            return ResponseEntity.badRequest().body("Failed to dismiss group");
+            throw new BusinessException(ResponseCodeEnum.CODE_500);
         }
 
         // 软删除群组相关的会话
@@ -293,7 +291,7 @@ public class GroupInfoServiceImpl extends ServiceImpl<GroupInfoMapper, GroupInfo
 
         // TODO：清理redis缓存
 
-        return ResponseEntity.ok("Dismiss group successfully");
+        return "Dismiss group successfully";
     }
 
 }

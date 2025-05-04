@@ -1,5 +1,6 @@
 package com.light.chat.service;
 
+import com.alibaba.fastjson.JSONArray;
 import com.light.chat.domain.dto.group.DismissGroupRequest;
 import com.light.chat.domain.dto.group.EnterGroupRequest;
 import com.light.chat.domain.dto.group.LeaveGroupRequest;
@@ -8,15 +9,15 @@ import org.springframework.http.ResponseEntity;
 
 public interface GroupInfoService {
 
-    ResponseEntity<?> createGroup(GroupInfo groupInfo);
+    String createGroup(GroupInfo groupInfo);
 
-    ResponseEntity<?> loadMyGroups();
+    JSONArray loadMyGroups();
 
-    ResponseEntity<?> checkGroupAddMode(String groupId);
+    Integer checkGroupAddMode(String groupId);
 
-    ResponseEntity<?> enterGroupDirect(EnterGroupRequest request);
+    String enterGroupDirect(EnterGroupRequest request);
 
-    ResponseEntity<?> leaveGroup(LeaveGroupRequest leaveGroupRequest);
+    String leaveGroup(LeaveGroupRequest leaveGroupRequest);
 
-    ResponseEntity<?> dismissGroup(DismissGroupRequest dismissGroupRequest);
+    String dismissGroup(DismissGroupRequest dismissGroupRequest);
 }

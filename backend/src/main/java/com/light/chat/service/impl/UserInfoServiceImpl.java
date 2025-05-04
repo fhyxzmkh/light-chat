@@ -1,12 +1,15 @@
 package com.light.chat.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.light.chat.config.security.UserDetailsImpl;
 import com.light.chat.domain.dto.account.RegisterOrLoginRequest;
 import com.light.chat.domain.dto.account.UserInfoDto;
+import com.light.chat.domain.enums.ResponseCodeEnum;
 import com.light.chat.domain.po.UserInfo;
+import com.light.chat.exception.BusinessException;
 import com.light.chat.mapper.UserInfoMapper;
 import com.light.chat.service.EmailCodeService;
 import com.light.chat.service.UserInfoService;
@@ -15,8 +18,6 @@ import com.light.chat.utils.JwtUtil;
 import com.light.chat.utils.ObjectUtil;
 import com.light.chat.utils.SecurityUtil;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,9 +26,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.HashSet;
-import java.util.Set;
 
 
 @Service
@@ -47,7 +45,7 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResponseEntity<?> register(RegisterOrLoginRequest request) {
+    public String register(RegisterOrLoginRequest request) {
         String email = request.getEmail();
         String password = request.getPassword();
         String nickname = request.getNickname();
@@ -55,23 +53,20 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
 
         // 参数校验
         if (email == null || password == null || nickname == null || emailCode == null) {
-            return ResponseEntity.badRequest().body("All fields are required");
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
 
         // 检查邮箱是否已注册
         if (lambdaQuery().eq(UserInfo::getEmail, email).one() != null) {
-            return ResponseEntity.badRequest().body("Email already registered");
+            throw new BusinessException("Email already registered");
         }
 
         // 检查昵称是否已存在
         if (lambdaQuery().eq(UserInfo::getNickname, nickname).one() != null) {
-            return ResponseEntity.badRequest().body("Nickname already taken");
+            throw new BusinessException("Nickname already taken");
         }
 
-        ResponseEntity<?> codeValidation = emailCodeService.isValidEmailCode(email, emailCode);
-        if (!codeValidation.getStatusCode().is2xxSuccessful()) {
-            return codeValidation;
-        }
+        emailCodeService.isValidEmailCode(email, emailCode);
 
         String userUuid = CaptchaUtil.generateNumberCode(20);
 
@@ -84,16 +79,16 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
 
         userInfoMapper.insert(newUser);
 
-        return ResponseEntity.ok("注册成功");
+        return "注册成功";
     }
 
     @Override
-    public ResponseEntity<?> login(RegisterOrLoginRequest request) {
+    public JSONObject login(RegisterOrLoginRequest request) {
         String username = request.getNickname();
         String password = request.getPassword();
 
         if (username == null || password == null) {
-            return ResponseEntity.badRequest().body("All fields are required");
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
 
         UsernamePasswordAuthenticationToken authenticationToken =
@@ -108,22 +103,22 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         JSONObject result = new JSONObject();
         result.put("token", JwtUtil.createJWT(user.getUuid()));
 
-        return ResponseEntity.ok(result);
+        return result;
     }
 
     @Override
-    public ResponseEntity<?> updateUserInfo(UserInfo userInfo) {
+    public String updateUserInfo(UserInfo userInfo) {
         UserInfo user = SecurityUtil.getLoginUser();
 
         BeanUtils.copyProperties(userInfo, user, ObjectUtil.getNullPropertyNames(userInfo));
 
         userInfoMapper.update(user, new QueryWrapper<UserInfo>().eq("uuid", user.getUuid()));
 
-        return ResponseEntity.ok("更新用户信息成功");
+        return "更新用户信息成功";
     }
 
     @Override
-    public ResponseEntity<?> getUserInfo() {
+    public JSONObject getUserInfo() {
         UserInfo user = SecurityUtil.getLoginUser();
         UserInfoDto userInfoDto = new UserInfoDto();
         BeanUtils.copyProperties(user, userInfoDto);
@@ -131,7 +126,7 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         JSONObject result = new JSONObject();
         result.put("userInfo", userInfoDto);
 
-        return ResponseEntity.ok(result);
+        return result;
     }
 
 }

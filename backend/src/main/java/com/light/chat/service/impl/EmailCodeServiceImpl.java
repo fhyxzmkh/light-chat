@@ -4,11 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.light.chat.domain.po.EmailCode;
 import com.light.chat.domain.po.UserInfo;
+import com.light.chat.exception.BusinessException;
 import com.light.chat.mapper.EmailCodeMapper;
 import com.light.chat.mapper.UserInfoMapper;
 import com.light.chat.service.EmailCodeService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.validation.constraints.Email;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,13 +44,13 @@ public class EmailCodeServiceImpl extends ServiceImpl<EmailCodeMapper, EmailCode
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResponseEntity<?> sendEmailCode(String email, Integer type) {
+    public String sendEmailCode(String email, Integer type) {
         if (type == 0) {
             QueryWrapper<UserInfo> wrapper = new QueryWrapper<>();
             wrapper.eq("email", email);
             UserInfo user = userInfoMapper.selectOne(wrapper);
             if (user != null) {
-                return ResponseEntity.badRequest().body("Email already registered");
+                throw new BusinessException("Email already registered");
             }
 
             String code = generateNumberCode(5);
@@ -60,28 +62,27 @@ public class EmailCodeServiceImpl extends ServiceImpl<EmailCodeMapper, EmailCode
             EmailCode emailCode = EmailCode.builder().email(email).code(code).build();
             emailCodeMapper.insert(emailCode);
 
-            return ResponseEntity.ok("Email code sent successfully");
+            return "Email code sent successfully";
         }
 
-        return ResponseEntity.badRequest().body("Invalid type");
+        throw new BusinessException("Invalid type");
     }
 
     @Override
-    public ResponseEntity<?> isValidEmailCode(String email, String code) {
+    public void isValidEmailCode(String email, String code) {
         QueryWrapper<EmailCode> wrapper = new QueryWrapper<>();
         wrapper.eq("email", email);
         wrapper.eq("code", code);
         EmailCode emailCode = emailCodeMapper.selectOne(wrapper);
         if (emailCode == null) {
-            return ResponseEntity.badRequest().body("邮箱验证码不正确");
+            throw new BusinessException("邮箱验证码不正确");
         }
 
         if (emailCode.getStatus() == 1 || System.currentTimeMillis() - emailCode.getCreateAt().getTime() > 5 * 1000 * 60) {
-            return ResponseEntity.badRequest().body("邮箱验证码已失效");
+            throw new BusinessException("邮箱验证码已失效");
         }
 
         emailCodeMapper.disableEmailCode(email);
-        return ResponseEntity.ok(null);
     }
 
     private void sendEmailCode(String toEmail, String code) {
